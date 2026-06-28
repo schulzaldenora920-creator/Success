@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>打单军师 · ToB 销售实战参谋</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --bg-soft:#11182e;
+    --panel:#151d36;
+    --panel-2:#1b2543;
+    --line:#27314f;
+    --text:#e8ecf6;
+    --text-dim:#9aa6c4;
+    --text-mute:#6b7799;
+    --brand:#5b7cfa;
+    --brand-2:#7b5bfa;
+    --accent:#26d4a4;
+    --warn:#ffb454;
+    --danger:#ff6b81;
+    --radius:16px;
+    --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(123,91,250,.18), transparent 60%),
+      radial-gradient(1000px 500px at -10% 10%, rgba(91,124,250,.16), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:980px;margin:0 auto;padding:0 20px 80px;}
+
+  /* Top bar */
+  header{
+    position:sticky;top:0;z-index:30;
+    backdrop-filter:saturate(140%) blur(10px);
+    background:linear-gradient(to bottom, rgba(11,16,32,.92), rgba(11,16,32,.6));
+    border-bottom:1px solid var(--line);
+  }
+  .bar{max-width:980px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:12px;}
+  .logo{
+    width:34px;height:34px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    display:grid;place-items:center;font-weight:800;color:#fff;font-size:18px;
+    box-shadow:0 8px 22px -8px var(--brand);
+  }
+  .brand-name{font-weight:700;letter-spacing:.5px}
+  .brand-sub{font-size:12px;color:var(--text-mute)}
+  .bar .spacer{flex:1}
+  .pill{font-size:12px;color:var(--text-dim);border:1px solid var(--line);padding:5px 11px;border-radius:999px;background:var(--panel)}
+
+  /* Steps */
+  .steps{display:flex;align-items:center;gap:8px;margin:26px 2px 8px;color:var(--text-mute);font-size:13px}
+  .steps .s{display:flex;align-items:center;gap:7px}
+  .steps .dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;border:1px solid var(--line);background:var(--panel)}
+  .steps .s.active{color:var(--text)}
+  .steps .s.active .dot{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+  .steps .s.done .dot{background:var(--accent);border-color:var(--accent);color:#06231b}
+  .steps .arr{opacity:.4}
+
+  .view{display:none;animation:fade .35s ease both}
+  .view.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* Hero */
+  .hero{margin-top:18px}
+  .hero h1{font-size:30px;line-height:1.25;font-weight:800;letter-spacing:.3px}
+  .hero h1 .hl{background:linear-gradient(120deg,var(--brand),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--text-dim);margin-top:10px;font-size:15px;max-width:640px}
+  .ask{margin:26px 0 14px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px}
+  .ask .q{width:24px;height:24px;border-radius:7px;background:var(--panel-2);display:grid;place-items:center;color:var(--brand);font-weight:800}
+
+  /* Pain cards */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  .card{
+    text-align:left;cursor:pointer;border:1px solid var(--line);background:var(--panel);
+    border-radius:var(--radius);padding:18px 18px 16px;transition:.18s;position:relative;overflow:hidden;
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--brand);box-shadow:var(--shadow)}
+  .card .emoji{font-size:22px}
+  .card h3{font-size:16px;margin:10px 0 5px;font-weight:700}
+  .card p{font-size:13px;color:var(--text-mute);line-height:1.5}
+  .card .tag{position:absolute;top:14px;right:14px;font-size:11px;color:var(--text-mute);border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+  .card .go{margin-top:12px;font-size:13px;color:var(--brand);font-weight:600;display:flex;align-items:center;gap:5px;opacity:.85}
+
+  .other{margin-top:14px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;color:var(--text-mute);font-size:13.5px;cursor:pointer;text-align:center;transition:.15s}
+  .other:hover{color:var(--text-dim);border-color:var(--text-mute)}
+
+  /* Context form */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .crumb{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .crumb .back{cursor:pointer;color:var(--text-mute);font-size:13px;display:flex;align-items:center;gap:5px}
+  .crumb .back:hover{color:var(--text)}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel-2);border:1px solid var(--line);padding:7px 13px;border-radius:999px;font-size:14px;font-weight:600;margin:8px 0 4px}
+  .chip .e{font-size:16px}
+  .form-title{margin:16px 0 4px;font-weight:700;font-size:17px}
+  .form-sub{color:var(--text-mute);font-size:13.5px;margin-bottom:16px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:7px;font-weight:600}
+  .field label .opt{color:var(--text-mute);font-weight:400;font-size:12px}
+  .field textarea,.field input,.field select{
+    width:100%;background:var(--bg-soft);border:1px solid var(--line);color:var(--text);
+    border-radius:11px;padding:12px 13px;font-size:14px;font-family:inherit;resize:vertical;transition:.15s;
+  }
+  .field textarea:focus,.field input:focus,.field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,124,250,.18)}
+  .field textarea{min-height:84px;line-height:1.6}
+  .field .hintchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .field .hintchips span{font-size:12px;color:var(--text-mute);background:var(--bg-soft);border:1px solid var(--line);padding:4px 9px;border-radius:8px;cursor:pointer;transition:.15s}
+  .field .hintchips span:hover{color:var(--text);border-color:var(--brand)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  .btn{
+    cursor:pointer;border:none;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:700;font-family:inherit;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;transition:.15s;
+    box-shadow:0 12px 28px -12px var(--brand);
+  }
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn-row{display:flex;align-items:center;gap:12px;margin-top:6px}
+  .btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--line);box-shadow:none}
+
+  /* AI output */
+  .answer-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .ai-ava{width:38px;height:38px;border-radius:11px;flex:none;background:linear-gradient(135deg,var(--brand),var(--accent));display:grid;place-items:center;font-size:20px}
+  .answer-head .t{font-weight:700}
+  .answer-head .t small{display:block;color:var(--text-mute);font-weight:400;font-size:12px}
+
+  .block{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-top:14px}
+  .block.diag{border-left:3px solid var(--warn)}
+  .block.steps-b{border-left:3px solid var(--brand)}
+  .block.script{border-left:3px solid var(--accent)}
+  .block.risk{border-left:3px solid var(--danger)}
+  .block h4{font-size:14px;letter-spacing:.5px;display:flex;align-items:center;gap:9px;margin-bottom:12px;color:var(--text)}
+  .block h4 .ic{font-size:17px}
+  .block p{color:var(--text-dim);font-size:14.5px}
+  .stepline{display:flex;gap:13px;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .stepline:last-child{border-bottom:none;padding-bottom:0}
+  .stepline .n{width:24px;height:24px;border-radius:7px;flex:none;background:var(--brand);color:#fff;font-weight:800;display:grid;place-items:center;font-size:13px}
+  .stepline .c b{font-size:14.5px}
+  .stepline .c span{display:block;color:var(--text-mute);font-size:13px;margin-top:2px}
+  .quote{background:var(--bg-soft);border:1px solid var(--line);border-radius:11px;padding:13px 64px 13px 15px;font-size:14px;color:var(--text);line-height:1.7;position:relative;margin-top:4px;word-break:break-word}
+  .quote .copy{position:absolute;top:9px;right:9px;font-size:11px;color:var(--text-mute);border:1px solid var(--line);padding:3px 9px;border-radius:7px;cursor:pointer;background:var(--panel)}
+  .quote .copy:hover{color:var(--text);border-color:var(--brand)}
+  .quote + .quote{margin-top:9px}
+  .why{margin-top:9px;font-size:12.5px;color:var(--text-mute);background:var(--bg-soft);border-radius:8px;padding:8px 11px;border:1px dashed var(--line)}
+  .why b{color:var(--brand)}
+
+  .feedback{display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .feedback .lbl{font-size:13px;color:var(--text-mute)}
+  .fbtn{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text-dim);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;transition:.15s}
+  .fbtn:hover{border-color:var(--brand);color:var(--text)}
+  .fbtn.on{background:var(--accent);color:#06231b;border-color:var(--accent)}
+
+  /* thinking */
+  .thinking{display:flex;align-items:center;gap:12px;padding:30px;color:var(--text-dim);font-size:14px}
+  .spinner{width:20px;height:20px;border:2.5px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .think-steps{font-size:13px;color:var(--text-mute);margin-top:2px}
+
+  footer{margin-top:40px;text-align:center;color:var(--text-mute);font-size:12.5px}
+  .demo-flag{display:inline-block;margin-top:8px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel)}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">谋</div>
+    <div>
+      <div class="brand-name">打单军师</div>
+      <div class="brand-sub">ToB 销售实战参谋 · MVP Demo</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill">新销售 · 王磊</div>
+  </div>
+</header>
+
+<div class="app">
+
+  <div class="steps">
+    <div class="s active" id="st1"><span class="dot">1</span>选卡点</div>
+    <span class="arr">→</span>
+    <div class="s" id="st2"><span class="dot">2</span>说情况</div>
+    <span class="arr">→</span>
+    <div class="s" id="st3"><span class="dot">3</span>给打法</div>
+  </div>
+
+  <!-- VIEW 1: pain selector -->
+  <section class="view show" id="view1">
+    <div class="hero">
+      <h1>你这单<span class="hl">卡在哪了</span>？<br/>点一下，我给你下一步该怎么打。</h1>
+      <p>不用从头讲故事，也不用懂"销售方法论"。挑一个最像你现在处境的卡点，告诉我几句具体情况，我把行家的打法、动作和能直接发出去的话术给你。</p>
+    </div>
+
+    <div class="ask"><span class="q">?</span>你现在最头疼的是哪个？</div>
+
+    <div class="grid" id="painGrid"></div>
+
+    <div class="other" id="otherCard">以上都不是？直接描述我的情况 →</div>
+  </section>
+
+  <!-- VIEW 2: context form -->
+  <section class="view" id="view2">
+    <div class="panel">
+      <div class="crumb">
+        <div class="back" id="backTo1">← 换个卡点</div>
+      </div>
+      <div class="chip"><span class="e" id="ctxEmoji">🎯</span><span id="ctxName">卡点</span></div>
+      <div class="form-title">说说你这一单的具体情况</div>
+      <div class="form-sub">越具体，打法越准。下面只有第一个是必填，其它能填就填，30 秒搞定。</div>
+
+      <div class="field">
+        <label>① 现在的具体情况 / 客户原话是什么？</label>
+        <textarea id="fSituation" placeholder="例：上周技术对接人说方案没问题，让我等通知，这周打过去说还在内部走流程，就没下文了…"></textarea>
+        <div class="hintchips" id="sitHints"></div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>② 客户行业 / 类型 <span class="opt">（选填）</span></label>
+          <input id="fIndustry" placeholder="例：制造业 / 200人规模" />
+        </div>
+        <div class="field">
+          <label>③ 单子金额量级 <span class="opt">（选填）</span></label>
+          <select id="fAmount">
+            <option value="">不确定 / 暂不填</option>
+            <option>5万以内</option>
+            <option>5–20万</option>
+            <option>20–50万</option>
+            <option>50万以上</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>④ 你已经试过什么？ <span class="opt">（选填，帮我避免给重复建议）</span></label>
+        <textarea id="fTried" placeholder="例：发过微信跟进、打过两次电话、给对接人发了案例…"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="genBtn">让军师给我打法 →</button>
+        <button class="btn btn-ghost" id="backTo1b">返回</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 3: AI answer -->
+  <section class="view" id="view3">
+    <div class="crumb" style="margin-bottom:14px">
+      <div class="back" id="backTo2">← 改一下情况</div>
+    </div>
+
+    <div id="thinkingBox">
+      <div class="panel">
+        <div class="thinking">
+          <div class="spinner"></div>
+          <div>
+            <div>军师正在分析你的单子…</div>
+            <div class="think-steps" id="thinkText">识别卡点类型</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="answerBox" style="display:none">
+      <div class="answer-head">
+        <div class="ai-ava">谋</div>
+        <div class="t">这单我帮你这么打<small id="ansCtx">基于「卡点」+ 你的具体情况</small></div>
+      </div>
+
+      <div class="block diag">
+        <h4><span class="ic">🔍</span>先看清楚：你其实卡在这</h4>
+        <p id="outDiag"></p>
+      </div>
+
+      <div class="block steps-b">
+        <h4><span class="ic">🪜</span>接下来按这个顺序打</h4>
+        <div id="outSteps"></div>
+      </div>
+
+      <div class="block script">
+        <h4><span class="ic">💬</span>能直接用的话术</h4>
+        <div id="outScripts"></div>
+        <div class="why" id="outWhy"></div>
+      </div>
+
+      <div class="block risk">
+        <h4><span class="ic">⚠️</span>别踩这个坑</h4>
+        <p id="outRisk"></p>
+      </div>
+
+      <div class="feedback">
+        <span class="lbl">这个打法对你有用吗？（你的反馈帮军师变准）</span>
+        <button class="fbtn" data-fb="yes">👍 有用，照这个干</button>
+        <button class="fbtn" data-fb="no">👎 不太对，再给个思路</button>
+      </div>
+
+      <div class="btn-row" style="margin-top:22px">
+        <button class="btn" id="newCase">＋ 换一单 / 换个卡点</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    打单军师 · MVP 体验 Demo　|　卡点 → 情境 → 打法，把标准打单思路喂到每一个卡住的节点
+    <br/><span class="demo-flag">演示版：AI 回复为预置的示例打法，用于体验产品形态</span>
+  </footer>
+</div>
+
+<script>
+/* ---------- Pain points (the entry that replaces a blank chat box) ---------- */
+const PAINS = [
+  {id:'decision', emoji:'🚪', name:'约不到 / 接触不到关键决策人',
+   tag:'接触决策链',
+   desc:'一直在跟对接人，但拍板的人见不到、约不上，单子推不动。',
+   hints:['对接人不肯引荐','不知道谁是真正拍板的','约了几次都被推脱']},
+  {id:'stall', emoji:'🕓', name:'客户一直拖 · 不推进',
+   tag:'推进逼单',
+   desc:'客户说"挺好的""再看看""内部走流程"，然后就没下文了。',
+   hints:['让我等通知','说在走内部流程','已读不回 / 已经失联']},
+  {id:'quote', emoji:'📄', name:'报价后没下文',
+   tag:'报价跟进',
+   desc:'报价发过去就石沉大海，不知道是嫌贵还是在比价。',
+   hints:['报价后已读不回','说要跟领导汇报','让我先发个方案看看']},
+  {id:'price', emoji:'⚔️', name:'被竞品压价 / 拿来比价',
+   tag:'竞争应对',
+   desc:'客户拿竞品报价压我，或者明显是把我当陪标的。',
+   hints:['对方比我便宜','感觉是来比价的','客户说别家有某功能']},
+  {id:'need', emoji:'🧭', name:'摸不清客户到底要什么',
+   tag:'需求挖掘',
+   desc:'聊了几次还是不知道客户真正的痛点和决策标准。',
+   hints:['客户自己说不清需求','需求一直在变','不知道该问什么']},
+  {id:'judge', emoji:'🔮', name:'判断不了这单还有没有戏',
+   tag:'商机研判',
+   desc:'投入了不少精力，但不确定该继续压还是该放。',
+   hints:['不确定要不要继续投入','客户态度模糊','怕白忙一场']},
+];
+
+/* ---------- Pre-baked "expert" plays (the methodology engine, surfaced as situational advice) ---------- */
+const PLAYS = {
+  decision:{
+    diag:'你现在的真实问题不是"约不到老板"，而是<b>你和对接人之间还没建立起"我帮你在内部立功"的关系</b>。对接人不引荐你，往往是怕担责、或者怕你绕过他。强行越级会把唯一的内线得罪掉。',
+    steps:[
+      ['先把对接人变成盟友，而不是绕过他','明确告诉他：引荐你不会抢他功劳，反而帮他在领导面前显得专业。'],
+      ['用"需要决策人才能回答的问题"创造见面理由','准备 1–2 个对接人答不了、必须老板拍板的问题，自然引出见决策人。'],
+      ['给对接人一份"可以直接转给领导"的材料','让他零成本地把你推上去，降低他的引荐门槛。'],
+    ],
+    scripts:[
+      '王工，有两个问题可能得贵公司能拍板的领导才好定，比如预算节奏和上线时间。要不下次您方便的时候，带我跟负责的领导碰 15 分钟？我准备好材料，绝不占用太多时间，也让领导看到是您在帮他把关这件事。',
+      '我整理了一页纸的方案要点，您看着合适的话可以直接转给领导，省得您还要复述，有问题我随时补充。',
+    ],
+    why:'核心打法：<b>不越级、把内线变盟友</b>。新人最常犯的错是急着绕过对接人直接找老板，结果失去唯一的内部支持。',
+    risk:'千万别背着对接人直接去加决策人微信或打电话。一旦让对接人觉得你在架空他，他会在内部反向阻击你，这单基本就废了。',
+  },
+  stall:{
+    diag:'"再看看""走流程"通常不是真的在走流程，而是<b>客户内部缺一个"现在就得办"的理由</b>，你这件事在他的优先级里排不上。光催进度没用，得帮他找到"拖下去的代价"。',
+    steps:[
+      ['先诊断是"没意愿"还是"没权限"','一句话试探：是方案本身还有顾虑，还是卡在内部某个环节？回答会暴露真实卡点。'],
+      ['制造"现在做"的理由（成本/风险/时间窗）','把"晚一个季度上线"换算成具体损失，让拖延变得有代价。'],
+      ['约一个有具体产出的"小下一步"','不要问"考虑得怎样了"，而是约一个明确动作：一次小范围演示、一版试点方案。'],
+    ],
+    scripts:[
+      '张总，我不催您做决定，就想确认一下：是方案本身还有没说清楚的地方，还是卡在内部某个环节？这样我好知道该怎么配合您往前推。',
+      '我理解走流程需要时间。只是这边如果这个季度内能定，我们能锁住今年的实施排期；再往后，团队档期排到下季度，您这边上线也得跟着延。要不我们先约个 30 分钟的小范围演示，让用得上的同事先看看？',
+    ],
+    why:'核心打法：<b>把"催进度"换成"给理由 + 约小下一步"</b>。客户拖延的本质是缺紧迫感，不是缺信息。',
+    risk:'别反复发"在吗""考虑得怎么样了"。这种无价值跟进只会让客户更想躲你，把你拉进"已读不回"的死循环。',
+  },
+  quote:{
+    diag:'报价后没下文，几乎都不是"嫌贵"，而是<b>你过早地把竞争焦点拉到了价格上，且没绑定决策人</b>。报价一旦脱离价值单独存在，就只能比谁便宜。现在要做的是把对话从"多少钱"拽回"值不值"。',
+    steps:[
+      ['先确认报价到没到拍板人手里','很多时候报价卡在对接人那没上去，先搞清楚它现在在谁手上。'],
+      ['用"价值锚"重新包装价格，而不是降价','把价格拆到它能带来的回报/节省上，让对方算的是 ROI 不是绝对值。'],
+      ['给一个有条件的推进钩子','例如限期权益、试点名额，给一个"现在动"的具体好处，但绑定动作不绑定降价。'],
+    ],
+    scripts:[
+      '李经理，方案报价发您这边后，想跟您确认下：是已经报到能拍板的领导那边了，还是还在您这边过？我好判断接下来怎么配合。',
+      '关于价格我多说一句：这套方案大概能帮您这边每月省下 X 人天的重复工作，按半年算就基本覆盖投入了。如果这个季度定下来，我可以帮您申请一个试点期的优先支持名额——名额有限，您要不要我先帮您占一个？',
+    ],
+    why:'核心打法：<b>不降价，先把价格放回价值里</b>，再用"有条件钩子"换推进。一降价你就承认了之前是虚高，且会陷入比价泥潭。',
+    risk:'客户一沉默就主动降价，是新人最致命的动作。这等于告诉客户"再拖一拖还能更便宜"，反而让他更不着急。',
+  },
+  price:{
+    diag:'客户拿竞品压你，要先分清是<b>"真的更看重价格"还是"在用你当筹码压别家 / 压你"</b>。盲目跟着降价，你就把自己变成了可替换的廉价选项。你要做的是制造"不可比较性"。',
+    steps:[
+      ['先确认竞品对比的"题面"是否对你有利','问清楚对方拿来比的是哪几项，很多时候比的维度本身就被竞品带偏了。'],
+      ['把战场从"同一张表"挪开，建立差异化锚点','强调对方没有、但客户场景真正需要的点，让"便宜"显得是因为缺东西。'],
+      ['给决策人一个"选贵的"的台阶','帮拍板人准备好对内交代的理由：选你不是更贵，是更稳/风险更低。'],
+    ],
+    scripts:[
+      '您拿来对比的那家我了解，价格确实低一些。我想跟您确认下，他们的报价里包不包含 XX 这块？因为很多客户上线后才发现这部分要额外加钱，总价反而更高，我担心您这边后面被动。',
+      '我不跟您比谁更便宜，我帮您算的是"上线之后真正能不能用起来"。要不我给您列一张落地对比清单，您拿去跟领导汇报，选哪家都心里有底。',
+    ],
+    why:'核心打法：<b>拒绝在对方设定的价格战场里应战</b>，把对比维度换成"落地风险"，并帮决策人准备好"选贵的"的内部说辞。',
+    risk:'别贬低竞品。直接说对手坏话会显得你不专业、还会激发客户逆反。要做的是抬高对比维度，让客户自己得出结论。',
+  },
+  need:{
+    diag:'客户说不清需求，本质是<b>你在问"你要什么"，而客户自己也不知道——你得问"你现在哪里疼"</b>。需求要从现状的痛点和代价里挖，而不是让客户帮你写需求清单。',
+    steps:[
+      ['从现状和痛点切入，而不是问功能','别问"您想要什么功能"，问"现在这件事是怎么做的、哪一步最费劲"。'],
+      ['用具体场景和数字把痛点放大','把"有点麻烦"逼成"每月多花多少人/多少钱/多少风险"。'],
+      ['反向确认决策标准','问清楚"这次解决了，您怎么算成功"，这就是你后面打单的靶子。'],
+    ],
+    scripts:[
+      '您先别急着想方案。我想先搞清楚：现在这块业务你们是怎么做的？哪一个环节最让团队头疼、最容易出错？',
+      '如果这个问题这次能彻底解决，对您和团队来说，最大的不一样会是什么？您会用什么标准判断这次选对了？',
+    ],
+    why:'核心打法：<b>需求是挖出来的，不是问出来的</b>。从"现状—痛点—代价—成功标准"四步走，客户会自己把需求讲清楚。',
+    risk:'别一上来就介绍产品功能。客户需求没挖清楚就开始讲方案，等于自说自话，客户只会礼貌性点头然后消失。',
+  },
+  judge:{
+    diag:'判断一单有没有戏，别靠"客户态度好不好"这种感觉，要靠<b>三个硬指标：有没有真痛点、能不能见到拍板人、有没有明确时间线</b>。三个里缺两个以上，就该降低投入而不是继续硬压。',
+    steps:[
+      ['用三问给这单做体检','痛点真不真？决策人见没见到？有没有明确的预算和上线时间？'],
+      ['做一次"推进力测试"','提一个需要客户付出小成本的要求（约决策人/给资料/定时间），看他配不配合。'],
+      ['据结果决定：压、养、还是放','配合度高就重点压；模糊就低成本养着；三项全缺、又不配合，果断把精力挪给更有戏的单。'],
+    ],
+    scripts:[
+      '张总，为了不浪费您时间，我想跟您对一下接下来的节奏：如果方案合适，您这边大概希望什么时候能用上？中间还需要哪几位同事点头？',
+      '这样，我下周带方案来给您和相关同事一起过一遍，您看周三还是周四方便？（用对方是否愿意约决策人来测真实意愿）',
+    ],
+    why:'核心打法：<b>用"推进力测试"代替猜测</b>。让客户付出一个小成本，他的配合度会诚实地告诉你这单的真实温度。',
+    risk:'别因为已经投入了精力就舍不得放（沉没成本）。把时间耗在一个见不到决策人、没时间线的单子上，才是新人最大的隐形亏损。',
+  },
+};
+
+/* ---------- App logic ---------- */
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+let current=null;
+
+function renderPains(){
+  const g=$('#painGrid');
+  g.innerHTML=PAINS.map(p=>`
+    <button class="card" data-id="${p.id}">
+      <span class="tag">${p.tag}</span>
+      <div class="emoji">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <p>${p.desc}</p>
+      <div class="go">从这个卡点开始 →</div>
+    </button>`).join('');
+  $$('#painGrid .card').forEach(c=>c.onclick=()=>selectPain(c.dataset.id));
+}
+
+function setStep(n){
+  [1,2,3].forEach(i=>{
+    const el=$('#st'+i);
+    el.classList.remove('active','done');
+    if(i<n)el.classList.add('done');
+    if(i===n)el.classList.add('active');
+  });
+}
+function showView(n){
+  $$('.view').forEach(v=>v.classList.remove('show'));
+  $('#view'+n).classList.add('show');
+  setStep(n);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectPain(id){
+  current=PAINS.find(p=>p.id===id) || {id:'other',emoji:'🧩',name:'我自己的情况',hints:[]};
+  $('#ctxEmoji').textContent=current.emoji;
+  $('#ctxName').textContent=current.name;
+  // hint chips
+  const hc=$('#sitHints');
+  hc.innerHTML=(current.hints||[]).map(h=>`<span>${h}</span>`).join('');
+  hc.querySelectorAll('span').forEach(s=>s.onclick=()=>{
+    const t=$('#fSituation');
+    t.value=t.value?t.value+'；'+s.textContent:s.textContent;
+    t.focus();
+  });
+  $('#fSituation').value='';$('#fTried').value='';$('#fIndustry').value='';$('#fAmount').value='';
+  showView(2);
+}
+
+function generate(){
+  showView(3);
+  $('#thinkingBox').style.display='block';
+  $('#answerBox').style.display='none';
+  const steps=['识别卡点类型','调取对应的标准打单思路','结合你的具体情况','生成可执行的下一步动作'];
+  let i=0;$('#thinkText').textContent=steps[0];
+  const tick=setInterval(()=>{i++;if(i<steps.length)$('#thinkText').textContent=steps[i];},520);
+
+  setTimeout(()=>{
+    clearInterval(tick);
+    renderAnswer();
+    $('#thinkingBox').style.display='none';
+    $('#answerBox').style.display='block';
+  },2100);
+}
+
+function renderAnswer(){
+  const play=PLAYS[current.id]||PLAYS.stall;
+  $('#ansCtx').textContent=`基于「${current.name}」+ 你的具体情况`;
+  $('#outDiag').innerHTML=play.diag;
+  $('#outSteps').innerHTML=play.steps.map((s,i)=>`
+    <div class="stepline"><div class="n">${i+1}</div><div class="c"><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('');
+  $('#outScripts').innerHTML=play.scripts.map(q=>`
+    <div class="quote">${q}<span class="copy">复制</span></div>`).join('');
+  $('#outWhy').innerHTML='💡 '+play.why;
+  $('#outRisk').textContent=play.risk;
+  // copy buttons
+  $$('#outScripts .copy').forEach(b=>b.onclick=()=>{
+    const txt=b.parentElement.childNodes[0].textContent;
+    navigator.clipboard?.writeText(txt);
+    b.textContent='已复制 ✓';setTimeout(()=>b.textContent='复制',1400);
+  });
+  // feedback
+  $$('.fbtn').forEach(b=>{b.classList.remove('on');b.onclick=()=>{
+    $$('.fbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  };});
+}
+
+/* nav */
+renderPains();
+$('#otherCard').onclick=()=>selectPain('other');
+$('#backTo1').onclick=()=>showView(1);
+$('#backTo1b').onclick=()=>showView(1);
+$('#backTo2').onclick=()=>showView(2);
+$('#genBtn').onclick=()=>{
+  if(!$('#fSituation').value.trim()){$('#fSituation').focus();$('#fSituation').style.borderColor='var(--danger)';return;}
+  generate();
+};
+$('#fSituation').addEventListener('input',e=>{e.target.style.borderColor='';});
+$('#newCase').onclick=()=>showView(1);
+</script>
+</body>
+</html>
